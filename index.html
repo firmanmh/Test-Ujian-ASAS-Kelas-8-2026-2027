@@ -32,7 +32,7 @@
       text-align: center;
     }
 
-    /* Area Ujian Form Presenter */
+    /* Area Ujian */
     iframe {
       position: absolute;
       top: 36px;
@@ -46,13 +46,13 @@
 <body>
 
   <div class="top-notice">
-    ⚠️ Mode Pengawas Aktif: Jangan menutup halaman atau membuka aplikasi lain selama ujian berlangsung.
+    ⚠️ Mode Pengawas Aktif: Jangan pindah tab atau membuka aplikasi lain selama ujian.
   </div>
 
-  <!-- Ganti PASTE_LINK_FORM_PRESENTER_DI_SINI dengan link dari Form Presenter + Timer -->
+  <!-- Disarankan mengganti src di bawah dengan link panjang Google Form (akhiran /viewform?embedded=true) -->
   <iframe 
     id="examFrame" 
-    src="https://forms.gle/82QouejqQBezhEE19" 
+    src="https://docs.google.com/forms/d/e/1FAIpQLSflbkEEvGzUeJoCOqtIWV3t6vGLAHuq18Jxeb0ceahY34r0tg/viewform?usp=dialog" 
     allow="camera; microphone; fullscreen">
     Memuat Halaman Ujian...
   </iframe>
@@ -61,14 +61,15 @@
     const frame = document.getElementById('examFrame');
     const urlAsli = frame.src;
     let sedangReset = false;
+    let timerKeluar = null;
 
     function refreshDanHapusJawaban() {
       if (sedangReset) return;
       sedangReset = true;
 
-      alert("PERINGATAN!\nAnda terdeteksi keluar dari halaman ujian atau membuka aplikasi lain.\nHalaman akan dimuat ulang dan pilihan jawaban yang belum dikirim akan terhapus.");
+      alert("PERINGATAN!\nAnda terdeteksi meninggalkan halaman ujian atau membuka aplikasi lain.\nHalaman akan dimuat ulang dan jawaban yang belum dikirim akan terhapus.");
       
-      // Memuat ulang iframe ke URL awal untuk menghapus pilihan jawaban
+      // Memuat ulang iframe untuk mereset isian
       frame.src = "";
       setTimeout(() => {
         frame.src = urlAsli;
@@ -76,16 +77,17 @@
       }, 300);
     }
 
-    // 1. Deteksi jika siswa pindah tab, menekan tombol Home HP, atau membuka aplikasi lain
+    // Hanya mendeteksi jika tab/aplikasi benar-benar ditinggalkan (hidden)
     document.addEventListener("visibilitychange", function() {
       if (document.hidden) {
-        refreshDanHapusJawaban();
+        // Beri toleransi 1.5 detik untuk menghindari salah deteksi akibat pop-up sistem HP
+        timerKeluar = setTimeout(() => {
+          refreshDanHapusJawaban();
+        }, 1500);
+      } else {
+        // Batalkan reset jika siswa kembali sebelum 1.5 detik
+        clearTimeout(timerKeluar);
       }
-    });
-
-    // 2. Deteksi jika jendela browser kehilangan fokus (split-screen / pop-up aplikasi lain)
-    window.addEventListener("blur", function() {
-      refreshDanHapusJawaban();
     });
   </script>
 </body>
